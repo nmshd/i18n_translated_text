@@ -7,6 +7,20 @@ on:
 
 jobs:
   publish:
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Dart SDK with JWT token
+        uses: dart-lang/setup-dart@v1
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Publish - dry run
+        run: dart pub publish --dry-run
+      - name: Publish to pub.dev
+        run: dart pub publish -f
