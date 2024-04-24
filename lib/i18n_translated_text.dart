@@ -3,6 +3,9 @@ library translated_text;
 import 'package:flutter/material.dart';
 import 'package:flutter_i18n/flutter_i18n.dart';
 
+/// A widget that displays a string that is translated using the FlutterI18n package.
+/// If the string starts with 'i18n://', it will be translatedm otherwise it will be displayed as is.
+/// All the parameters are the same as the Text widget.
 class TranslatedText extends Text {
   const TranslatedText(
     super.data, {
