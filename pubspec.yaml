@@ -1,6 +1,6 @@
 name: i18n_translated_text
 description: A helper package for translating i18n:// prefixed texts. Uses flutter_i18n internally for translations.
-version: 1.0.0
+version: 1.0.1
 
 repository: https://github.com/nmshd/i18n_translated_text
 homepage: https://enmeshed.eu
