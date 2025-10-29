@@ -1,3 +1,7 @@
+# 1.0.3
+
+Updated dependency flutter_i18n.
+
 # 1.0.2
 
 Housekeeping.
