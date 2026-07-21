@@ -8,6 +8,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      PUBLISH_DIR: ~/publish
     permissions:
       contents: read
       id-token: write
@@ -19,7 +21,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - name: Write package version from git tag into pubspec.yaml
+      - name: Write package version into pubspec.yaml and update CHANGELOG.md from release notes
         run: |
           package_version="${VERSION#v}"
 
@@ -28,12 +30,48 @@ jobs:
             exit 1
           fi
 
-          sed -i "s/^version: .*/version: $package_version/" pubspec.yaml
+          # we have to copy the code (without the .git folder) into a separate directory for publishing because the "dart pub publish" command doesn't like uncommitted git changes
+          mkdir -p "$PUBLISH_DIR"
+          git archive --format=tar HEAD | tar -x -C "$PUBLISH_DIR"
+
+          sed -i "s/^version: .*/version: $package_version/" "$PUBLISH_DIR/pubspec.yaml"
+
+          release_notes="$(mktemp)"
+          for attempt in {1..12}; do
+            if gh release view "$VERSION" --json body --jq .body > "$release_notes"; then
+              break
+            fi
+
+            if [[ "$attempt" == "12" ]]; then
+              echo "::error::No GitHub Release found for tag '$VERSION'."
+              exit 1
+            fi
+
+            sleep 5
+          done
+
+          {
+            echo "# $package_version"
+            echo
+            if [[ -s "$release_notes" ]]; then
+              cat "$release_notes"
+            else
+              echo "* No release notes provided."
+            fi
+            echo
+            echo
+            cat "$PUBLISH_DIR/CHANGELOG.md"
+          } > "$PUBLISH_DIR/CHANGELOG.md.new"
+          mv "$PUBLISH_DIR/CHANGELOG.md.new" "$PUBLISH_DIR/CHANGELOG.md"
         env:
+          GH_TOKEN: ${{ github.token }}
           VERSION: ${{ github.ref_name }}
       - name: Install dependencies
+        working-directory: ${{ env.PUBLISH_DIR }}
         run: flutter pub get
       - name: Publish - dry run
+        working-directory: ${{ env.PUBLISH_DIR }}
         run: dart pub publish --dry-run
       - name: Publish to pub.dev
+        working-directory: ${{ env.PUBLISH_DIR }}
         run: dart pub publish -f
