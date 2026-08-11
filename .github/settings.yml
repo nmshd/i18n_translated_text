@@ -9,6 +9,10 @@ repository:
   allow_update_branch: true
   delete_branch_on_merge: true
 
+teams:
+  - name: flutter-dependency-update-reviewers
+    permission: push
+
 labels:
   - name: breaking-change
     color: "#16060F"
